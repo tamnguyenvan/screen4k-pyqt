@@ -5,8 +5,6 @@ from PySide6.QtCore import Qt, QEvent
 class CustomScrollArea(QScrollArea):
     def __init__(self):
         super().__init__()
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
         self.customize_scroll_bars()
         self.verticalScrollBar().installEventFilter(self)
@@ -55,7 +53,7 @@ class CustomScrollArea(QScrollArea):
         """)
 
     def eventFilter(self, source, event):
-        if source == self.verticalScrollBar() or source == self.horizontalScrollBar():
+        if source == self:
             if event.type() == QEvent.Enter:
                 self.showScrollBars()
             elif event.type() == QEvent.Leave:
@@ -63,9 +61,9 @@ class CustomScrollArea(QScrollArea):
         return super().eventFilter(source, event)
 
     def showScrollBars(self):
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-
-    def hideScrollBars(self):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+    def hideScrollBars(self):
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

@@ -11,18 +11,21 @@ class ScreenRecorder:
     def __init__(self, output_path: str = None, start_delay: float = 0.5):
         self._output_path = output_path
         self._start_delay = start_delay
-        self._record_thread = None
-        self._mouse_track_thread = None
-        self._moues_events = {'move': [], 'click': []}
         self._writer = None
         self._frame_index = 0
         self._frame_width = None
         self._frame_height = None
-        self._is_stopped = Event()
-        self._is_stopped.set()
         self._fps = 25
         self._maximum_fps = 200
+        self._default_duration = 3
+
         self._stream = ScreenGear().start()  # Initialize the screen capture stream
+        self._record_thread = None
+        self._mouse_track_thread = None
+        self._moues_events = {'move': [], 'click': []}
+
+        self._is_stopped = Event()
+        self._is_stopped.set()
 
     def set_output(self, output_path: str):
         """Sets the output path for the recording."""
@@ -113,7 +116,7 @@ class ScreenRecorder:
             if pressed and self._frame_width is not None and self._frame_height is not None:
                 relative_x = x / self._frame_width
                 relative_y = y / self._frame_height
-                self._moues_events['click'].append((relative_x, relative_y, self._frame_index))
+                self._moues_events['click'].append((relative_x, relative_y, self._frame_index, self._default_duration))
 
         with Listener(on_move=on_move, on_click=on_click) as listener:
             while not self._is_stopped.is_set():

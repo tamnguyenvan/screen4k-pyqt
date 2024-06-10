@@ -181,6 +181,8 @@ class ColorPage(QWidget):
 
     def init_ui(self):
         grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.setSpacing(0)
         self.setLayout(grid_layout)
 
         for i, color in enumerate(self.colors):

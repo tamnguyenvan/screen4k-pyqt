@@ -226,8 +226,8 @@ class Background(BaseTransform):
             pass
         elif background['type'] == 'color':
             hex_color = background['value']
-            color = hex_to_rgb(hex_color)
-            background_image = np.full(shape=(height, width, 3), fill_value=color, dtype=np.uint8)
+            r, g, b = hex_to_rgb(hex_color)
+            background_image = np.full(shape=(height, width, 3), fill_value=(b, g, r), dtype=np.uint8)
 
         return background_image
 

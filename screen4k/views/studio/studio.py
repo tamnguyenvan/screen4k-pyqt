@@ -72,7 +72,7 @@ class Studio(QWidget):
         video_edit_widget = VideoEdit()
 
         video_edit_scroll_area.setWidget(video_edit_widget)
-        video_edit_scroll_area.setFixedHeight(210)
+        video_edit_scroll_area.setFixedHeight(230)
 
         main_layout.addWidget(video_edit_scroll_area)
 

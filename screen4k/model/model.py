@@ -30,6 +30,14 @@ class Model:
         self._duration = 25
 
         self._mouse_events = None
+        self._mouse_events = {
+            'click': [
+                [0.5, 0.5, 100, 3],
+                [0.3, 0.3, 200, 3],
+                [0.3, 0.3, 400, 3],
+            ],
+            'move': []
+        }
         self._transform = None
 
         background = {'type': 'wallpaper','value': 1}
@@ -128,8 +136,15 @@ class Model:
     def duration(self):
         return self._duration
 
+    @property
+    def mouse_events(self):
+        return self._mouse_events
+
     def next_frame(self):
         return self._get()
+
+    def get_frame(self, frame_index):
+        return self._get(frame_index)
 
     def set_background(self, background):
         self._transform['background'] = Background(background=background)
