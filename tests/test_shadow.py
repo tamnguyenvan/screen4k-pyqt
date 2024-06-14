@@ -1,39 +1,69 @@
 import cv2
 import numpy as np
 
-def show_img(img):
-    cv2.imshow('img', img)
-    cv2.waitKey()
+def rounded_rectangle(src, top_left, bottom_right, radius=1, color=255, thickness=1, line_type=cv2.LINE_AA):
 
-image = cv2.imread('/home/tamnv/Downloads/picofme.png')
+    #  corners:
+    #  p1 - p2
+    #  |     |
+    #  p4 - p3
 
-h, w, _ = image.shape
+    p1 = top_left
+    p2 = (bottom_right[1], top_left[1])
+    p3 = (bottom_right[1], bottom_right[0])
+    p4 = (top_left[0], bottom_right[0])
 
-# Kích thước của viền và độ dịch chuyển của bóng
-border_size = 50
-shadow_offset = 10
+    height = abs(bottom_right[0] - top_left[1])
 
-# Màu nền và màu bóng
-background_color = [255, 255, 255]  # Màu cam trong BGR
-shadow_color = [128, 128, 128]    # Màu xám trong BGR
+    if radius > 1:
+        radius = 1
 
-# Tạo ảnh nền màu cam lớn hơn
-background = np.ones((h + 2*border_size + shadow_offset, w + 2*border_size + shadow_offset, 3), dtype=np.uint8) * background_color
-background = background.astype(np.uint8)
+    corner_radius = int(radius * (height/2))
+    corner_radius = 20
 
-# Tạo một ảnh cùng kích thước với ảnh nền để chứa bóng xám
-shadow_layer = np.zeros_like(background)
+    if thickness < 0:
 
-# Vẽ hình ảnh bóng màu xám xung quanh
-shadow_layer[border_size + shadow_offset:border_size + h + shadow_offset, border_size + shadow_offset:border_size + w + shadow_offset] = shadow_color
-shadow_layer = shadow_layer.astype(np.uint8)
+        #big rect
+        top_left_main_rect = (int(p1[0] + corner_radius), int(p1[1]))
+        bottom_right_main_rect = (int(p3[0] - corner_radius), int(p3[1]))
 
-# Làm mờ bóng để tạo hiệu ứng mềm mại
-shadow_layer = cv2.GaussianBlur(shadow_layer, (21, 21), 10)
+        top_left_rect_left = (p1[0], p1[1] + corner_radius)
+        bottom_right_rect_left = (p4[0] + corner_radius, p4[1] - corner_radius)
+
+        top_left_rect_right = (p2[0] - corner_radius, p2[1] + corner_radius)
+        bottom_right_rect_right = (p3[0], p3[1] - corner_radius)
+
+        all_rects = [
+        [top_left_main_rect, bottom_right_main_rect],
+        [top_left_rect_left, bottom_right_rect_left],
+        [top_left_rect_right, bottom_right_rect_right]]
+
+        [cv2.rectangle(src, rect[0], rect[1], color, thickness) for rect in all_rects]
+
+    # draw straight lines
+    cv2.line(src, (p1[0] + corner_radius, p1[1]), (p2[0] - corner_radius, p2[1]), color, abs(thickness), line_type)
+    cv2.line(src, (p2[0], p2[1] + corner_radius), (p3[0], p3[1] - corner_radius), color, abs(thickness), line_type)
+    cv2.line(src, (p3[0] - corner_radius, p4[1]), (p4[0] + corner_radius, p3[1]), color, abs(thickness), line_type)
+    cv2.line(src, (p4[0], p4[1] - corner_radius), (p1[0], p1[1] + corner_radius), color, abs(thickness), line_type)
+
+    # draw arcs
+    cv2.ellipse(src, (p1[0] + corner_radius, p1[1] + corner_radius), (corner_radius, corner_radius), 180.0, 0, 90, color ,thickness, line_type)
+    cv2.ellipse(src, (p2[0] - corner_radius, p2[1] + corner_radius), (corner_radius, corner_radius), 270.0, 0, 90, color , thickness, line_type)
+    cv2.ellipse(src, (p3[0] - corner_radius, p3[1] - corner_radius), (corner_radius, corner_radius), 0.0, 0, 90,   color , thickness, line_type)
+    cv2.ellipse(src, (p4[0] + corner_radius, p4[1] - corner_radius), (corner_radius, corner_radius), 90.0, 0, 90,  color , thickness, line_type)
+
+    return src
 
 
-background = cv2.addWeighted(background, 1, shadow_layer, 0.5, 0)
 
-# Đặt ảnh gốc lên ảnh nền
-background[border_size:border_size+h, border_size:border_size+w] = image
-show_img(background)
+
+top_left = (100, 100)
+bottom_right = (1024, 1024)
+color = (255, 255, 255)
+image_size = (1080, 1920, 3)
+img = np.zeros(image_size)
+img = rounded_rectangle(img, top_left, bottom_right, color=color, radius=0.1, thickness=-1)
+
+cv2.namedWindow('img', cv2.WINDOW_NORMAL)
+cv2.imshow('img', img)
+cv2.waitKey(0)

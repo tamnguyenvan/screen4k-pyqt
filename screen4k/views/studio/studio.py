@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QColor, QPainter, QPixmap
 
 from views.widgets.custom_scrollarea import CustomScrollArea
+from views.studio.top_toolbar import TopToolBar
 from views.studio.video_preview import VideoPreview
 from views.studio.sidebar import SideBar
 from views.studio.video_edit import VideoEdit
@@ -32,17 +33,19 @@ class Studio(QWidget):
         main_layout.setContentsMargins(margin, margin, margin, margin)
 
         # Top toolbar
-        top_toolbar_layout = QHBoxLayout()
-        top_toolbar_layout.setContentsMargins(0, 0, 0, 0)
-        top_toolbar_layout.setSpacing(0)
+        # top_toolbar_layout = QHBoxLayout()
+        # top_toolbar_layout.setContentsMargins(0, 0, 0, 0)
+        # top_toolbar_layout.setSpacing(0)
 
-        top_toolbar_widget = QWidget()
+        # top_toolbar_widget = QWidget()
+        # top_toolbar_widget.setFixedHeight(50)
+        # top_toolbar_widget.setLayout(top_toolbar_layout)
+
+        # export_button = QPushButton('Export', self)
+        # top_toolbar_layout.addStretch()
+        # top_toolbar_layout.addWidget(export_button)
+        top_toolbar_widget = TopToolBar(self)
         top_toolbar_widget.setFixedHeight(50)
-        top_toolbar_widget.setLayout(top_toolbar_layout)
-
-        export_button = QPushButton('Export', self)
-        top_toolbar_layout.addStretch()
-        top_toolbar_layout.addWidget(export_button)
 
         main_layout.addWidget(top_toolbar_widget)
 
@@ -72,7 +75,7 @@ class Studio(QWidget):
         video_edit_widget = VideoEdit()
 
         video_edit_scroll_area.setWidget(video_edit_widget)
-        video_edit_scroll_area.setFixedHeight(230)
+        video_edit_scroll_area.setFixedHeight(240)
 
         main_layout.addWidget(video_edit_scroll_area)
 

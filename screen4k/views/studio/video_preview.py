@@ -8,6 +8,7 @@ from PySide6.QtGui import QColor, QPainter, QPixmap, QIcon, QImage
 
 from views.widgets.custom_button import IconButton
 from views.widgets.custom_label import AspectRatioLabel
+from views.widgets.custom_dropdown import DropDownButton
 from utils.image import ImageAssets
 from utils.context import AppContext
 
@@ -20,14 +21,18 @@ class VideoPreview(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.frame_label = AspectRatioLabel()
+        self.top_toolbar = VideoTopToolBar(parent=self)
+        self.top_toolbar.setFixedHeight(40)
+
+        self.frame_label = AspectRatioLabel(parent=self)
         self.frame_label.setAlignment(Qt.AlignCenter)
 
-        self.toolbar = VideoToolBar(self)
+        self.toolbar = VideoToolBar(parent=self)
         self.toolbar.setFixedHeight(40)
         self.toolbar.frame_changed.connect(self.on_frame_changed)
         AppContext.set('video_toolbar', self.toolbar)
 
+        layout.addWidget(self.top_toolbar)
         layout.addWidget(self.frame_label, 1)
         layout.addWidget(self.toolbar)
 
@@ -37,6 +42,41 @@ class VideoPreview(QWidget):
 
     def on_frame_changed(self, pixmap):
         self.frame_label.setPixmapWithAspectRatio(pixmap)
+
+
+class VideoTopToolBar(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.setAlignment(Qt.AlignCenter)
+
+        items = [
+            'Auto',
+            '16:9',
+            '9:16',
+            '4:3',
+            '1:1',
+            '3:4',
+        ]
+        self.drop_down = DropDownButton(items=items, parent=self)
+        self.drop_down.clicked.connect(self.drop_down.show_menu)
+        self.drop_down.value_changed.connect(self.change_aspect_ratio)
+
+        layout.addWidget(self.drop_down)
+        self.setLayout(layout)
+
+    def change_aspect_ratio(self, aspect_ratio):
+        model = AppContext.get('model')
+        model.set_aspect_ratio(aspect_ratio)
+        frame = model.current_frame
+
+        AppContext.get('video_toolbar').display_frame(frame)
 
 
 class VideoToolBar(QWidget):
@@ -63,14 +103,15 @@ class VideoToolBar(QWidget):
         group1_layout.setSpacing(20)
 
         group1_layout.addStretch(1)
-        button1 = IconButton('images/ui_controls/add.svg')
-        button2 = IconButton('images/ui_controls/add.svg')
-        button3 = IconButton('images/ui_controls/add.svg')
-        group1_layout.addStretch(1)
+        # button1 = IconButton('images/ui_controls/add.svg')
+        # button2 = IconButton('images/ui_controls/add.svg')
+        # button3 = IconButton('images/ui_controls/add.svg')
 
-        group1_layout.addWidget(button1)
-        group1_layout.addWidget(button2)
-        group1_layout.addWidget(button3)
+        # group1_layout.addWidget(button1)
+        # group1_layout.addWidget(button2)
+        # group1_layout.addWidget(button3)
+        group1_layout.addWidget(QWidget())
+        group1_layout.addStretch(1)
 
         # Group 2: Three buttons
         group2_layout = QHBoxLayout()

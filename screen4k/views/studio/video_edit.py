@@ -113,6 +113,8 @@ class VideoEdit(QWidget):
             zoom_track_width = zoom_track.width()
             self.zoom_tracks[index + 1].drag_range_x[0] = zoom_track_x + zoom_track_width
 
+        # TODO: Update the underlying data
+
     def update_zoom_track_after_delete(self, index):
         num_tracks = len(self.zoom_tracks)
 
@@ -143,7 +145,8 @@ class VideoEdit(QWidget):
         self.zoom_tracks[index].deleteLater()
         del self.zoom_tracks[index]
 
-        # Invoke the model to update the underlying data
+        # Update the underlying data
+        AppContext.get('model').delete_click_event(index)
 
 
 class Timeline(QWidget):
@@ -389,9 +392,9 @@ class ZoomTrack(QWidget):
         clip_image_path = ImageAssets.file('images/ui_controls/cursor.svg')
         clip_image = QPixmap(clip_image_path)
         clip_label.setPixmap(clip_image)
+
         top_row.addStretch(1)
         top_row.addWidget(clip_label)
-
         top_row.addWidget(QLabel('Zoom'))
         top_row.addStretch(1)
 
@@ -400,21 +403,20 @@ class ZoomTrack(QWidget):
         bottom_row.setContentsMargins(0, 0, 0, 0)
         bottom_row.setSpacing(4)
 
-        bottom_row.addStretch(1)
-
         zoom_image = QPixmap(ImageAssets.file('images/ui_controls/zoom.svg'))
         zoom_label = QLabel()
         zoom_label.setPixmap(zoom_image)
-        bottom_row.addWidget(zoom_label)
-
-        bottom_row.addWidget(QLabel('2x'))
 
         mouse_image = QPixmap(ImageAssets.file('images/ui_controls/mouse.svg'))
         mouse_label = QLabel()
         mouse_label.setPixmap(mouse_image)
-        bottom_row.addWidget(mouse_label)
 
+        bottom_row.addStretch(1)
+        bottom_row.addWidget(zoom_label)
+        bottom_row.addWidget(QLabel('2x'))
+        bottom_row.addWidget(mouse_label)
         bottom_row.addWidget(QLabel('Auto'))
+
         bottom_row.addStretch(1)
 
         center_layout.addLayout(top_row)
@@ -441,6 +443,7 @@ class ZoomTrack(QWidget):
                 padding-top: 10px;
                 padding-bottom: 10px;
                 border-radius: 10px;
+                background: #303030;
             }
             QMenu::item:selected {
                 background-color: #383838;

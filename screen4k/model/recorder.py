@@ -3,7 +3,7 @@ import time
 from threading import Thread, Event
 import cv2
 from vidgear.gears import ScreenGear
-from pynput.mouse import Listener
+from pynput.mouse import Listener, Controller
 from loguru import logger
 
 
@@ -23,6 +23,8 @@ class ScreenRecorder:
         self._record_thread = None
         self._mouse_track_thread = None
         self._moues_events = {'move': [], 'click': []}
+
+        self._mouse_controller = Controller()
 
         self._is_stopped = Event()
         self._is_stopped.set()
@@ -84,6 +86,10 @@ class ScreenRecorder:
                     self._frame_width = frame_width
                     self._frame_height = frame_height
 
+                mouse_x, mouse_y = self._mouse_controller.position
+                relative_x, relative_y = mouse_x / frame_width, mouse_y / frame_height
+                self.mouse_events['move'].append([relative_x, relative_y, self._frame_index])
+
                 self._frame_index += 1
                 self._writer.write(frame)
                 t1 = time.time()
@@ -104,21 +110,16 @@ class ScreenRecorder:
 
     def _mouse_track(self):
         """Tracks mouse movements and clicks."""
-        def on_move(x, y):
-            """Handles mouse move events."""
-            if self._frame_width is not None and self._frame_height is not None:
-                relative_x = x / self._frame_width
-                relative_y = y / self._frame_height
-                self._moues_events['move'].append((relative_x, relative_y, self._frame_index))
-
         def on_click(x, y, button, pressed):
             """Handles mouse click events."""
             if pressed and self._frame_width is not None and self._frame_height is not None:
                 relative_x = x / self._frame_width
                 relative_y = y / self._frame_height
-                self._moues_events['click'].append((relative_x, relative_y, self._frame_index, self._default_duration))
+                logger.debug(f'Mouse click: ({relative_x},{relative_y},{self._frame_index})')
 
-        with Listener(on_move=on_move, on_click=on_click) as listener:
+                self._moues_events['click'].append([relative_x, relative_y, self._frame_index, self._default_duration])
+
+        with Listener(on_click=on_click) as listener:
             while not self._is_stopped.is_set():
                 self._is_stopped.wait()
             listener.stop()
