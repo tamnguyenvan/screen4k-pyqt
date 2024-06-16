@@ -1,47 +1,25 @@
 from PySide6.QtWidgets import (
     QWidget, QTabWidget, QVBoxLayout, QLabel, QStackedLayout,
-    QPushButton, QHBoxLayout, QGridLayout
+    QPushButton, QHBoxLayout, QGridLayout, QFrame,
 )
 from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Signal
 from utils.image import ImageAssets
 from utils.context import AppContext
 
 
-class CustomTabView(QWidget):
+class CustomTabView(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 10)
+        layout.setSpacing(10)
 
-        # Create buttons to switch tabs
-        self.buttons_layout = QHBoxLayout()
-        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
-        self.buttons_layout.setSpacing(0)
-        layout.addLayout(self.buttons_layout)
-
-        self.wallpaper_button = CustomTabButton('Wallpaper')
-        self.wallpaper_button.clicked.connect(lambda: self.switch_tab(0))
-        self.wallpaper_button.update_stylesheet(color='#4229f1')
-        self.buttons_layout.addWidget(self.wallpaper_button)
-
-        self.gradient_button = CustomTabButton('Gradient')
-        self.gradient_button.clicked.connect(lambda: self.switch_tab(1))
-        self.buttons_layout.addWidget(self.gradient_button)
-
-        self.color_button = CustomTabButton('Color')
-        self.color_button.clicked.connect(lambda: self.switch_tab(2))
-        self.buttons_layout.addWidget(self.color_button)
-
-        self.image_button = CustomTabButton('Image')
-        self.image_button.clicked.connect(lambda: self.switch_tab(3))
-        self.buttons_layout.addWidget(self.image_button)
-
-        self.buttons = [
-            self.wallpaper_button,
-            self.gradient_button,
-            self.color_button,
-            self.image_button,
-        ]
+        # Navbar
+        self.navbar = Navbar(self)
+        self.navbar.on_switched.connect(self.switch_tab)
+        layout.addWidget(self.navbar)
 
         # Create the stacked layout to hold pages
         self.stacked_layout = QStackedLayout()
@@ -63,19 +41,73 @@ class CustomTabView(QWidget):
 
         self.setLayout(layout)
 
-        self.apply_styles()
-
     def switch_tab(self, index):
         self.stacked_layout.setCurrentIndex(index)
 
-        for i, button in enumerate(self.buttons):
+        for i, button in enumerate(self.navbar.buttons):
             if i == index:
-                self.buttons[i].set_active()
+                self.navbar.buttons[i].set_active()
             else:
-                self.buttons[i].update_stylesheet()
+                self.navbar.buttons[i].update_stylesheet()
 
-    def apply_styles(self):
-        pass
+
+class Navbar(QFrame):
+    on_switched = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+        self.init_ui()
+        self.setObjectName("navbar")
+        self.setStyleSheet("""
+            #navbar {
+                border: 1px solid #4d5057;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+        """)
+
+    def init_ui(self):
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.wallpaper_button = CustomTabButton('Wallpaper')
+        self.wallpaper_button.clicked.connect(lambda: self.on_switched.emit(0))
+        self.wallpaper_button.set_active()
+
+        self.gradient_button = CustomTabButton('Gradient')
+        self.gradient_button.clicked.connect(lambda: self.on_switched.emit(1))
+
+        self.color_button = CustomTabButton('Color')
+        self.color_button.clicked.connect(lambda: self.on_switched.emit(2))
+
+        self.image_button = CustomTabButton('Image')
+        self.image_button.clicked.connect(lambda: self.on_switched.emit(3))
+
+        self.buttons = [
+            self.wallpaper_button,
+            self.gradient_button,
+            self.color_button,
+            self.image_button,
+        ]
+
+        layout.addWidget(self.wallpaper_button)
+        # layout.addWidget(self.create_divider())
+        layout.addWidget(self.gradient_button)
+        # layout.addWidget(self.create_divider())
+        layout.addWidget(self.color_button)
+        # layout.addWidget(self.create_divider())
+        layout.addWidget(self.image_button)
+
+
+        self.setLayout(layout)
+
+    def create_divider(self):
+        divider = QFrame()
+        divider.setFrameShape(QFrame.VLine)
+        divider.setObjectName('line')
+        return divider
 
 
 class CustomTabButton(QPushButton):
@@ -84,21 +116,21 @@ class CustomTabButton(QPushButton):
 
         self.update_stylesheet()
 
-    def update_stylesheet(self, color='darkgray', border_bottom='1px solid #ccc'):
+    def update_stylesheet(self, color='darkgray', border_bottom='none'):
         self.setStyleSheet(f'''
             CustomTabButton {{
                 background-color: transparent;
-                border: 1px solid {color};
                 padding: 10px;
                 min-width: auto;
                 color: {color};
+                border: none;
                 border-bottom: {border_bottom};
             }}
         ''')
 
     def set_active(self):
         # Change the style
-        self.update_stylesheet(color='#4229f1', border_bottom='2px solid #4229f1')
+        self.update_stylesheet(color='#4D4C7D', border_bottom='2px solid #4D4C7D')
 
 
 class WallpaperPage(QWidget):
@@ -144,7 +176,7 @@ class WallpaperThumbnail(QPushButton):
 
         layout.addWidget(self.thumbnail)
         self.setLayout(layout)
-        self.setFixedSize(50, 50)  # Ensure each thumbnail has a fixed size
+        self.setFixedSize(35, 35)  # Ensure each thumbnail has a fixed size
         self.setStyleSheet('border: 1px solid darkgray; background-color: white;')
 
     def on_click(self):

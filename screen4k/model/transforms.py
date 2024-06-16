@@ -537,13 +537,7 @@ class Background(BaseTransform):
             index = background['value']
             background_path = ImageAssets.file(f'images/wallpapers/original/gradient-wallpaper-{index:04d}.png')
             background_image = cv2.imread(background_path)
-
-            # Crop if needed
-            background_height, background_width = background_image.shape[:2]
-            cx, cy = background_width // 2, background_height // 2
-            xmin, ymin = cx - width // 2, cy - height // 2
-            xmax, ymax = xmin + width, ymin + height
-            background_image = background_image[ymin:ymax, xmin:xmax, :]
+            background_image = cv2.resize(background_image, (width, height))
         elif background['type'] == 'gradient':
             pass
         elif background['type'] == 'color':

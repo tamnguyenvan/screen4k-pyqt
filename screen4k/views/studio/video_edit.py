@@ -1,7 +1,7 @@
 import math
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QFrame, QMenu
-from PySide6.QtGui import QColor, QPainter, QPixmap, QMouseEvent, QAction, QIcon
+from PySide6.QtGui import QColor, QPainter, QPixmap, QMouseEvent, QAction, QIcon, QCursor
 from PySide6.QtCore import Qt, QSize, QPoint, Signal, QEvent
 
 from utils.context import AppContext
@@ -200,6 +200,9 @@ class TimelineSlider(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+
+        self.color = '#4D4C7D'
+
         self.init_ui()
 
         self.dragging = False
@@ -212,14 +215,17 @@ class TimelineSlider(QWidget):
 
         top_label = QLabel(self)
         top_label.setFixedSize(width, width)
-        top_label.setStyleSheet('border-radius: 8px; background-color: #4229F0;')
+        top_label.setStyleSheet(f"""
+            border-radius: 8px;
+            background-color: {self.color};
+        """)
         top_label.move(0, 0)
 
         vertical_bar_width = 2
         vertical_bar = QLabel(self)
         vertical_bar.setFixedSize(vertical_bar_width, height)
         vertical_bar.move((width - vertical_bar_width) // 2, 0)
-        vertical_bar.setStyleSheet('background-color: #4229F0;')
+        vertical_bar.setStyleSheet(f'background-color: {self.color};')
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.buttons() & Qt.LeftButton:
@@ -252,100 +258,114 @@ class ClipTrack(QWidget):
         self.duration = duration
         self.track_width = int(duration * AppContext.get('pix_per_sec'))
 
-        self.init_ui()
+        self.color = '#373A40'
+        self.strip_color = '#686D76'
+        self.active_border_color = 'darkgray'
+        self.active_border_width = 2
+        self.border_radius = 6
 
         self.setFixedSize(self.track_width, 60)
+        self.init_ui()
+        self.update_style()
 
-        # Install event filter to track_widget to handle focus in and out events
-        self.track_widget.installEventFilter(self)
-        self.clicked_inside = False
+        self.installEventFilter(self)
 
     def init_ui(self):
-        self.track_widget = QLabel(self)
-        self.track_widget.setStyleSheet('background-color: #865A0E; border-radius: 6px;')
-        self.track_widget.setFixedSize(self.track_width, 60)
-        self.track_widget.move(0, 0)
+        # Main layout
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
         # Left strip
-        self.left_strip = QLabel(self)
+        self.left_strip = QLabel()
         self.left_strip.setFixedSize(10, 60)
-        self.left_strip.setStyleSheet('background-color: #b37606; border-top-left-radius: 6px; border-bottom-left-radius: 6px;')
-        self.left_strip.move(0, 0)
 
-        # Center
-        center_layout = QVBoxLayout()
-        center_layout.setAlignment(Qt.AlignCenter)
+        # Center widget
+        self.center_widget = QFrame()
+        self.center_widget.setObjectName('center_widget')
+        center_layout = QVBoxLayout(self.center_widget)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(0)
+        center_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # 1st row
+        # Top row
         top_row = QHBoxLayout()
-        top_row.setContentsMargins(0, 0, 0, 0)
         top_row.setSpacing(4)
 
         clip_label = QLabel()
         clip_image_path = ImageAssets.file('images/ui_controls/clip.svg')
-        clip_image = QPixmap(clip_image_path)
-        clip_label.setPixmap(clip_image)
+        clip_label.setPixmap(QPixmap(clip_image_path))
+
         top_row.addStretch(1)
         top_row.addWidget(clip_label)
-
         top_row.addWidget(QLabel('Clip'))
         top_row.addStretch(1)
 
-        # 2nd row
+        # Bottom row
         bottom_row = QHBoxLayout()
-        bottom_row.setContentsMargins(0, 0, 0, 0)
         bottom_row.setSpacing(4)
 
+        clock_label = QLabel()
+        clock_label.setPixmap(QPixmap(ImageAssets.file('images/ui_controls/clock.svg')))
+
         bottom_row.addStretch(1)
-
-        duration_label = f'{self.duration:.1f}s'
-        bottom_row.addWidget(QLabel(duration_label))
-
-        mouse_image = QPixmap(ImageAssets.file('images/ui_controls/clock.svg'))
-
-        mouse_label = QLabel()
-        mouse_label.setPixmap(mouse_image)
-        bottom_row.addWidget(mouse_label)
-
+        bottom_row.addWidget(QLabel(f'{self.duration:.1f}s'))
+        bottom_row.addWidget(clock_label)
         bottom_row.addWidget(QLabel('2x'))
-
         bottom_row.addStretch(1)
 
         center_layout.addLayout(top_row)
         center_layout.addLayout(bottom_row)
 
-        center_widget = QWidget(self)
-        center_widget.setLayout(center_layout)
-        center_widget.setStyleSheet('background: transparent;')
-        x_pos = (self.track_width - center_widget.width()) // 2
-        center_widget.move(x_pos, 0)
-
         # Right strip
-        self.right_strip = QLabel(self)
+        self.right_strip = QLabel()
         self.right_strip.setFixedSize(10, 60)
-        self.right_strip.setStyleSheet('background-color: #b37606; border-top-right-radius: 6px; border-bottom-right-radius: 6px;')
-        x_pos = self.track_width - 10
-        self.right_strip.move(x_pos, 0)
 
-    def eventFilter(self, obj, event):
-        if obj == self.track_widget:
-            if event.type() == QEvent.Type.MouseButtonPress:
-                self.track_widget.setStyleSheet('background-color: #865A0E; border: 2px solid lightgray; border-radius: 6px;')
-                self.left_strip.setStyleSheet('background-color: #b37606; border-top-left-radius: 6px; border-bottom-left-radius: 6px; border-left: 2px solid lightgray; border-top: 2px solid lightgray; border-bottom: 2px solid lightgray;')
-                self.right_strip.setStyleSheet('background-color: #b37606; border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-right: 2px solid lightgray; border-top: 2px solid lightgray; border-bottom: 2px solid lightgray;')
-                self.clicked_inside = True
-            elif event.type() == QEvent.Type.FocusOut:
-                if not self.clicked_inside:
-                    self.track_widget.setStyleSheet('background-color: #865A0E; border-radius: 6px;')
-        return super().eventFilter(obj, event)
+        # Add widgets to main layout
+        main_layout.addWidget(self.left_strip)
+        main_layout.addWidget(self.center_widget)
+        main_layout.addWidget(self.right_strip)
+
+    def update_style(self, active=False):
+        active_border_style = f'{self.active_border_width}px solid {self.active_border_color}' if active else 'none'
+
+        self.center_widget.setStyleSheet(f"""
+            QFrame#center_widget {{
+                background-color: {self.color};
+                border-top: {active_border_style};
+                border-bottom: {active_border_style};
+            }}
+        """)
+
+        strip_style = f"""
+            background-color: {self.strip_color};
+            border-top: {active_border_style};
+            border-bottom: {active_border_style};
+        """
+
+        self.left_strip.setStyleSheet(f"""
+            {strip_style}
+            border-left: {active_border_style};
+            border-top-left-radius: {self.border_radius}px;
+            border-bottom-left-radius: {self.border_radius}px;
+        """)
+
+        self.right_strip.setStyleSheet(f"""
+            {strip_style}
+            border-right: {active_border_style};
+            border-top-right-radius: {self.border_radius}px;
+            border-bottom-right-radius: {self.border_radius}px;
+        """)
 
     def mousePressEvent(self, event: QMouseEvent):
-        if event.buttons() & Qt.MouseButton.LeftButton:
-            if not self.track_widget.geometry().contains(event.pos()):
-                self.track_widget.setStyleSheet('background-color: #865A0E; border-radius: 6px;')
-                self.clicked_inside = False
-            else:
-                self.clip_clicked.emit(event.pos().x())
+        if event.buttons() & Qt.LeftButton:
+            self.clip_clicked.emit(event.pos().x())
+            self.update_style(active=True)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.MouseButtonPress and not self.rect().contains(event.pos()):
+            self.update_style(active=False)
+        return super().eventFilter(obj, event)
 
 
 class ZoomTrack(QWidget):
@@ -361,29 +381,37 @@ class ZoomTrack(QWidget):
         self.duration = duration
         self.drag_range_x = drag_range_x
 
-        self.init_ui()
+        self.color = '#363062'
+        self.strip_color = '#616094'
+        self.active_border_color = 'darkgray'
+        self.active_border_width = 2
+        self.border_radius = 6
+
         self.setFixedSize(self.track_width, 60)
+        self.init_ui()
+        self.update_style()
 
         self.dragging = False
         self.offset = QPoint()
 
     def init_ui(self):
-        self.track_widget = QLabel(self)
-        self.track_widget.setStyleSheet('background-color: #4229F0; border-radius: 6px;')
-        self.track_widget.setFixedSize(self.track_width, 60)
-        self.track_widget.move(0, 0)
+        # Main layout
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
         # Left strip
-        self.left_strip = QLabel(self)
+        self.left_strip = QLabel()
         self.left_strip.setFixedSize(10, 60)
-        self.left_strip.setStyleSheet('background-color: #6049F5; border-top-left-radius: 6px; border-bottom-left-radius: 6px;')
-        self.left_strip.move(0, 0)
 
-        # Center
-        center_layout = QVBoxLayout()
-        center_layout.setAlignment(Qt.AlignCenter)
+        # Center widget
+        self.center_widget = QFrame()
+        self.center_widget.setObjectName('center_widget')
+        center_layout = QVBoxLayout(self.center_widget)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # 1st row
+        # Top row
         top_row = QHBoxLayout()
         top_row.setContentsMargins(0, 0, 0, 0)
         top_row.setSpacing(4)
@@ -398,7 +426,7 @@ class ZoomTrack(QWidget):
         top_row.addWidget(QLabel('Zoom'))
         top_row.addStretch(1)
 
-        # 2nd row
+        # Bottom row
         bottom_row = QHBoxLayout()
         bottom_row.setContentsMargins(0, 0, 0, 0)
         bottom_row.setSpacing(4)
@@ -416,25 +444,51 @@ class ZoomTrack(QWidget):
         bottom_row.addWidget(QLabel('2x'))
         bottom_row.addWidget(mouse_label)
         bottom_row.addWidget(QLabel('Auto'))
-
         bottom_row.addStretch(1)
 
         center_layout.addLayout(top_row)
         center_layout.addLayout(bottom_row)
 
-        center_widget = QWidget(self)
-        center_widget.setLayout(center_layout)
-        center_widget.setStyleSheet('background-color: transparent;')
-        x_pos = (self.track_width - center_widget.width()) // 2
-        center_widget.move(x_pos, 0)
-        # track_widget_layout.addLayout(center_layout)
-
         # Right strip
-        self.right_strip = QLabel(self)
+        self.right_strip = QLabel()
         self.right_strip.setFixedSize(10, 60)
-        self.right_strip.setStyleSheet('background-color: #6049F5; border-top-right-radius: 6px; border-bottom-right-radius: 6px;')
-        x_pos = self.track_width - 10
-        self.right_strip.move(x_pos, 0)
+
+        main_layout.addWidget(self.left_strip)
+        main_layout.addWidget(self.center_widget)
+        main_layout.addWidget(self.right_strip)
+
+        self.setLayout(main_layout)
+
+    def update_style(self, active=False):
+        active_border_style = f'{self.active_border_width}px solid {self.active_border_color}' if active else 'none'
+
+        self.center_widget.setStyleSheet(f"""
+            QFrame#center_widget {{
+                background-color: {self.color};
+                border-top: {active_border_style};
+                border-bottom: {active_border_style};
+            }}
+        """)
+
+        strip_style = f"""
+            background-color: {self.strip_color};
+            border-top: {active_border_style};
+            border-bottom: {active_border_style};
+        """
+
+        self.left_strip.setStyleSheet(f"""
+            {strip_style}
+            border-left: {active_border_style};
+            border-top-left-radius: {self.border_radius}px;
+            border-bottom-left-radius: {self.border_radius}px;
+        """)
+
+        self.right_strip.setStyleSheet(f"""
+            {strip_style}
+            border-right: {active_border_style};
+            border-top-right-radius: {self.border_radius}px;
+            border-bottom-right-radius: {self.border_radius}px;
+        """)
 
     def contextMenuEvent(self, event):
         context_menu = QMenu(self)
@@ -443,10 +497,10 @@ class ZoomTrack(QWidget):
                 padding-top: 10px;
                 padding-bottom: 10px;
                 border-radius: 10px;
-                background: #303030;
+                background: red;
             }
             QMenu::item:selected {
-                background-color: #383838;
+                background-color: darkgray;
             }
         """)
         delete_action = QAction(QIcon(ImageAssets.file('images/ui_controls/trash.svg')), "Delete", self)
@@ -463,9 +517,13 @@ class ZoomTrack(QWidget):
             self.dragging = True
             self.offset = event.pos()
 
+        # Set active style
+        self.update_style(active=True)
+
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.dragging:
-            new_x = self.mapToParent(event.pos()).x() - self.width() / 2
+            diff = self.mapToParent(event.pos()).x() - self.mapToParent(self.offset).x()
+            new_x = self.mapToParent(self.pos()).x() / 2 + diff
 
             drag_minimum_x = 0
             drag_maximum_x = 1e6

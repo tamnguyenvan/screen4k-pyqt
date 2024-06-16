@@ -22,7 +22,7 @@ class Studio(QWidget):
         self.showMaximized()
 
         # Set background color
-        self.setStyleSheet("background-color: #242424;")
+        self.setStyleSheet("background-color: #0B0D0F;")
 
         pix_per_sec = 200
         AppContext.set('pix_per_sec', pix_per_sec)
@@ -33,17 +33,6 @@ class Studio(QWidget):
         main_layout.setContentsMargins(margin, margin, margin, margin)
 
         # Top toolbar
-        # top_toolbar_layout = QHBoxLayout()
-        # top_toolbar_layout.setContentsMargins(0, 0, 0, 0)
-        # top_toolbar_layout.setSpacing(0)
-
-        # top_toolbar_widget = QWidget()
-        # top_toolbar_widget.setFixedHeight(50)
-        # top_toolbar_widget.setLayout(top_toolbar_layout)
-
-        # export_button = QPushButton('Export', self)
-        # top_toolbar_layout.addStretch()
-        # top_toolbar_layout.addWidget(export_button)
         top_toolbar_widget = TopToolBar(self)
         top_toolbar_widget.setFixedHeight(50)
 
@@ -61,7 +50,7 @@ class Studio(QWidget):
 
         # Sidebar (right side)
         sidebar = SideBar()
-        sidebar.setFixedWidth(400)
+        sidebar.setFixedWidth(480)
         center_layout.addWidget(sidebar)
 
         main_layout.addLayout(center_layout)
@@ -80,6 +69,7 @@ class Studio(QWidget):
         main_layout.addWidget(video_edit_scroll_area)
 
         self.setLayout(main_layout)
+        self.setStyleSheet('background: #0B0D0F;')
 
     def center_window(self):
         screen_geometry = QApplication.primaryScreen().availableGeometry()

@@ -7,12 +7,14 @@ class CustomSlider(QSlider):
     def __init__(
         self,
         orientation=Qt.Orientation.Horizontal,
-        color='#4229f1',
+        color='white',
+        handle_color='#363062',
         parent=None
     ):
         super().__init__(orientation, parent)
 
         self.color = color
+        self.handle_color = handle_color
 
         self.init_ui()
 
@@ -22,31 +24,29 @@ class CustomSlider(QSlider):
         self.setStyleSheet(f"""
             QSlider::groove:horizontal {{
                 border: 1px solid #4d5057;
-                height: 4px;
+                height: 2px;
                 background: #4d5057;
                 border-radius: 2px;
-                margin: 0 13px;
             }}
 
             QSlider::sub-page:horizontal {{
-                background: {self.color};
-                border: 1px solid {self.color};
-                height: 4px;
+                background: {self.handle_color};
+                border: 1px solid {self.handle_color};
+                height: 2px;
                 border-radius: 2px;
-                margin: 0 13px;
             }}
 
             QSlider::handle:horizontal {{
                 background: {self.color};
                 border: 1px solid {self.color};
-                width: 26px;
-                height: 26px;
-                margin: -11px 0;
-                border-radius: 13px;
+                width: 24px;
+                height: 24px;
+                margin: -12px 0;
+                border-radius: 12px;
             }}
 
             QSlider::handle:horizontal:pressed {{
-                background: {self.color};
+                background-color: white;
             }}
         """)
 

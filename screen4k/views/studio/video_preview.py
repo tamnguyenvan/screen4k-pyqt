@@ -8,7 +8,7 @@ from PySide6.QtGui import QColor, QPainter, QPixmap, QIcon, QImage
 
 from views.widgets.custom_button import IconButton
 from views.widgets.custom_label import AspectRatioLabel
-from views.widgets.custom_dropdown import DropDownButton
+from views.widgets.custom_dropdown import DropDown
 from utils.image import ImageAssets
 from utils.context import AppContext
 
@@ -64,7 +64,7 @@ class VideoTopToolBar(QWidget):
             '1:1',
             '3:4',
         ]
-        self.drop_down = DropDownButton(items=items, parent=self)
+        self.drop_down = DropDown(items=items, parent=self)
         self.drop_down.clicked.connect(self.drop_down.show_menu)
         self.drop_down.value_changed.connect(self.change_aspect_ratio)
 

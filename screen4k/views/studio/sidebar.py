@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QLabel
+    QWidget, QHBoxLayout, QVBoxLayout, QLabel, QFrame, QPushButton
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
@@ -7,16 +7,19 @@ from PySide6.QtGui import QPixmap
 from views.widgets.custom_tabview import CustomTabView
 from views.widgets.custom_slider import CustomSlider
 from views.widgets.custom_scrollarea import CustomScrollArea
+from views.widgets.custom_button import IconButton
 from utils.image import ImageAssets
 from utils.context import AppContext
 
 
-class SideBar(QWidget):
+class SideBar(QFrame):
     def __init__(self):
         super().__init__()
         self.init_ui()
 
     def init_ui(self):
+        self.setObjectName('sidebar')
+
         # main layout
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)
@@ -30,8 +33,8 @@ class SideBar(QWidget):
 
         sidebar_content_widget = QWidget()
         sidebar_content_layout = QVBoxLayout(sidebar_content_widget)
-        sidebar_content_layout.setContentsMargins(0, 0, 0, 0)
-        sidebar_content_layout.setSpacing(10)  # Adjust spacing for content
+        sidebar_content_layout.setContentsMargins(0, 30, 0, 0)
+        sidebar_content_layout.setSpacing(50)  # Adjust spacing for content
 
         # Background settings
         self.background_setting_widget = BackgroundSetting()
@@ -52,8 +55,9 @@ class SideBar(QWidget):
 
     def update_stylesheet(self):
         self.setStyleSheet("""
-            SideBar {
-                background-color: #f0f0f0;
+            #sidebar {
+                background-color: #131519;
+                border-radius: 20px;
             }
         """)
 
@@ -66,6 +70,8 @@ class BackgroundSetting(QWidget):
     def init_ui(self):
         # main layout
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(20)
 
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
@@ -109,6 +115,8 @@ class ShapeSetting(QWidget):
     def init_ui(self):
         # main layout
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(10)
 
         # Label
         label = QLabel('Shape')
@@ -143,8 +151,8 @@ class BaseShapeSetting(QWidget):
         self.slider_value = slider_value
 
         self.init_ui()
-
         self.slider.valueChanged.connect(self.on_value_changed)
+        self.reset_button.clicked.connect(self.reset_slider_value)
 
     def init_ui(self):
         # main layout
@@ -166,17 +174,39 @@ class BaseShapeSetting(QWidget):
 
         main_layout.addLayout(title_layout)
 
-        # Slider
+        # Slider layout
+        slider_layout = QHBoxLayout()
+        slider_layout.setContentsMargins(0, 0, 0, 0)
+        slider_layout.setSpacing(5)
+
         self.slider = CustomSlider()
         self.slider.setMaximum(self.slider_max)
         self.slider.setMinimum(self.slider_min)
         self.slider.setValue(self.slider_value)
-        main_layout.addWidget(self.slider)
+        slider_layout.addWidget(self.slider)
 
+        # Value Label
+        self.value_label = QLabel(str(self.slider_value))
+        self.value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.value_label.setFixedWidth(30)
+        self.value_label.setStyleSheet('color: darkgray;')
+        slider_layout.addWidget(self.value_label)
+
+        # Reset Button
+        self.reset_button = IconButton(
+            icon_path=ImageAssets.file('images/ui_controls/reset.svg'),
+            icon_size=(24, 24)
+        )
+        slider_layout.addWidget(self.reset_button)
+
+        main_layout.addLayout(slider_layout)
         self.setLayout(main_layout)
 
     def on_value_changed(self, value):
-        pass
+        self.value_label.setText(str(value))
+
+    def reset_slider_value(self):
+        self.slider.setValue(self.slider_value)
 
 
 class PaddingSetting(BaseShapeSetting):
@@ -184,6 +214,8 @@ class PaddingSetting(BaseShapeSetting):
         super().__init__('Padding', ImageAssets.file('images/ui_controls/padding.svg'), 500, 0, 50)
 
     def on_value_changed(self, value):
+        super().on_value_changed(value)
+
         # Update model
         AppContext.get('model').set_padding(value)
 
@@ -197,6 +229,8 @@ class InsetSetting(BaseShapeSetting):
         super().__init__('Inset', ImageAssets.file('images/ui_controls/padding.svg'), 200, 0, 0)
 
     def on_value_changed(self, value):
+        super().on_value_changed(value)
+
         # Update model
         AppContext.get('model').set_inset(value)
 
@@ -207,9 +241,11 @@ class InsetSetting(BaseShapeSetting):
 
 class RoundnessSetting(BaseShapeSetting):
     def __init__(self):
-        super().__init__('Roundness', ImageAssets.file('images/ui_controls/padding.svg'), 100, 0, 10)
+        super().__init__('Roundness', ImageAssets.file('images/ui_controls/border.svg'), 100, 0, 10)
 
     def on_value_changed(self, value):
+        super().on_value_changed(value)
+
         # Update model
         AppContext.get('model').set_roundness(value)
 

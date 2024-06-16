@@ -10,6 +10,8 @@ class CustomScrollArea(QScrollArea):
         self.verticalScrollBar().installEventFilter(self)
         self.horizontalScrollBar().installEventFilter(self)
 
+        self.setStyleSheet('background-color: transparent;')
+
     def customize_scroll_bars(self):
         self.verticalScrollBar().setStyleSheet("""
             QScrollBar:vertical {
